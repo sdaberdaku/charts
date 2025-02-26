@@ -13,14 +13,14 @@ helm repo index .
 
 The current repository can be added with the following command:
 ```shell
-helm repo add sebastiandaberdaku https://sebastiandaberdaku.github.io/charts
+helm repo add sdaberdaku https://sdaberdaku.github.io/charts
 ```
 The repository can then be updated with the following command:
 ```shell
-helm repo update sebastiandaberdaku
+helm repo update sdaberdaku
 ```
 
 To view the available charts in the repository you can use:
 ```shell
-helm search repo sebastiandaberdaku
+helm search repo sdaberdaku
 ```
