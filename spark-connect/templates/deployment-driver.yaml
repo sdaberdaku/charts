@@ -1,0 +1,166 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spark-connect.fullname" . }}-driver
+  labels:
+    {{- include "spark-connect.labels" . | nindent 4 }}
+    app.kubernetes.io/component: spark-driver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "spark-connect.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: spark-driver
+  template:
+    metadata:
+      annotations:
+        checksum/executor-pod-template: {{ include (print $.Template.BasePath "/configmaps/executor-pod-template.yaml") . | sha256sum }}
+        checksum/spark-properties: {{ include (print $.Template.BasePath "/configmaps/spark-properties.yaml") . | sha256sum }}
+        {{- if .Values.spark.log4j2.enabled }}
+        checksum/log4j2-properties: {{ include (print $.Template.BasePath "/configmaps/log4j2-properties.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if .Values.spark.metrics.enabled }}
+        checksum/metrics-properties: {{ include (print $.Template.BasePath "/configmaps/metrics-properties.yaml") . | sha256sum }}
+        {{- end }}
+        {{- with .Values.spark.driver.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.commonPodAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "spark-connect.labels" . | nindent 8 }}
+        app.kubernetes.io/component: spark-driver
+        {{- with .Values.spark.driver.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.commonPodLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "2"
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "spark-connect.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-driver
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "spark-connect.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/bash", "-c"]
+          args:
+            - >-
+              /opt/entrypoint.sh
+              {{ .Values.spark.homeDir }}/sbin/start-connect-server.sh
+              --conf spark.driver.host=${SPARK_DRIVER_POD_IP}
+              --conf spark.kubernetes.driver.pod.name=${SPARK_DRIVER_POD_NAME}
+              --properties-file {{ .Values.spark.homeDir }}/conf/spark-properties.conf
+          ports:
+            - name: spark-connect
+              containerPort: {{ .Values.service.ports.sparkConnect }}
+              protocol: TCP
+            - name: spark-driver
+              containerPort: {{ .Values.service.ports.sparkDriver }}
+              protocol: TCP
+            - name: spark-ui
+              containerPort: {{ .Values.service.ports.sparkUI }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - {{ .Values.spark.homeDir }}/sbin/stop-connect-server.sh
+          resources:
+            requests:
+              cpu: "{{ .Values.spark.driver.requestCoresMilliCPU }}m"
+              memory: "{{ add .Values.spark.driver.memoryMiB .Values.spark.driver.memoryOverheadMiB }}Mi"
+            limits:
+              memory: "{{ add .Values.spark.driver.memoryMiB .Values.spark.driver.memoryOverheadMiB }}Mi"
+          env:
+            - name: SPARK_HOME
+              value: {{ .Values.spark.homeDir }}
+            - name: SPARK_DRIVER_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SPARK_DRIVER_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: SPARK_NO_DAEMONIZE
+              value: "true"
+            - name: SPARK_LOCAL_DIRS
+              value: {{ join "," .Values.spark.scratchDirs }}
+            {{- with .Values.spark.driver.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: executor-pod-template
+              mountPath: {{ .Values.spark.homeDir }}/conf/executor-pod-template.yaml
+              subPath: executor-pod-template.yaml
+            - name: spark-properties
+              mountPath: {{ .Values.spark.homeDir }}/conf/spark-properties.conf
+              subPath: spark-properties.conf
+            {{- if .Values.spark.log4j2.enabled }}
+            - name: log4j2-properties
+              mountPath: {{ .Values.spark.homeDir }}/conf/log4j2.properties
+              subPath: log4j2.properties
+            {{- end }}
+            {{- if .Values.spark.metrics.enabled }}
+            - name: metrics-properties
+              mountPath: {{ .Values.spark.homeDir }}/conf/metrics.properties
+              subPath: metrics.properties
+            {{- end }}
+      volumes:
+        - name: executor-pod-template
+          configMap:
+            name: {{ include "spark-connect.fullname" . }}-executor-pod-template
+            items:
+              - key: executor-pod-template.yaml
+                path: executor-pod-template.yaml
+        - name: spark-properties
+          configMap:
+            name: {{ include "spark-connect.fullname" . }}-spark-properties
+            items:
+              - key: spark-properties.conf
+                path: spark-properties.conf
+        {{- if .Values.spark.log4j2.enabled }}
+        - name: log4j2-properties
+          configMap:
+            name: {{ include "spark-connect.fullname" . }}-log4j2-properties
+            items:
+              - key: log4j2.properties
+                path: log4j2.properties
+        {{- end }}
+        {{- if .Values.spark.metrics.enabled }}
+        - name: metrics-properties
+          configMap:
+            name: {{ include "spark-connect.fullname" . }}-metrics-properties
+            items:
+              - key: metrics.properties
+                path: metrics.properties
+        {{- end }}
+      {{- with .Values.spark.driver.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.spark.driver.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.spark.driver.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

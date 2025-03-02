@@ -1,0 +1,27 @@
+{{- if .Values.serviceAccount.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "spark-connect.name" . }}-driver-role
+  labels:
+    {{- include "spark-connect.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps", "persistentvolumeclaims"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "spark-connect.serviceAccountName" . }}-role-binding
+  labels:
+    {{- include "spark-connect.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "spark-connect.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "spark-connect.name" . }}-driver-role
+{{- end }}

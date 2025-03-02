@@ -1,0 +1,11 @@
+{{- if .Values.spark.log4j2.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "spark-connect.fullname" . }}-log4j2-properties
+  labels:
+    {{- include "spark-connect.labels" . | nindent 4 }}
+data:
+  log4j2.properties: |-
+    {{- tpl .Values.spark.log4j2.properties . | nindent 4 }}
+{{- end }}

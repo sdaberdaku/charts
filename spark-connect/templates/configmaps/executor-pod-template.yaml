@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "spark-connect.fullname" . }}-executor-pod-template
+  labels:
+    {{- include "spark-connect.labels" . | nindent 4 }}
+    app.kubernetes.io/component: spark-executor
+data:
+  executor-pod-template.yaml: |-
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: {{ .Chart.Name }}-executor
+      labels:
+        {{- include "spark-connect.labels" . | nindent 8 }}
+        app.kubernetes.io/component: spark-executor
+        {{- if or .Values.spark.executor.podAnnotations .Values.commonPodAnnotations }}
+      annotations:
+        {{- with .Values.spark.executor.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.commonPodAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+    spec:
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "2"
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "spark-connect.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-executor
+          env:
+            - name: SPARK_EXECUTOR_POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            - name: SPARK_EXECUTOR_POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            {{- with .Values.spark.executor.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      {{- with .Values.spark.executor.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.spark.executor.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.spark.executor.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

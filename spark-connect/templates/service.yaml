@@ -1,18 +1,29 @@
-{{- if .Values.service.create -}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "spark.serviceName" . }}
+  name: {{ include "spark-connect.fullname" . }}
   labels:
-    {{- include "spark.labels" . | nindent 4 }}
+    {{- include "spark-connect.labels" . | nindent 4 }}
+    app.kubernetes.io/component: spark-driver
   {{- with .Values.service.annotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{ . | toYaml | nindent 4 }}
   {{- end }}
 spec:
-  type: ClusterIP
-  clusterIP: None
-  sessionAffinity: ClientIP
+  clusterIP: None  # Headless service
+  ports:
+    - port: {{ .Values.service.ports.sparkConnect }}
+      targetPort: spark-connect
+      protocol: TCP
+      name: spark-connect
+    - port: {{ .Values.service.ports.sparkDriver }}
+      targetPort: spark-driver
+      protocol: TCP
+      name: spark-driver
+    - port: {{ .Values.service.ports.sparkUI }}
+      targetPort: spark-ui
+      protocol: TCP
+      name: spark-ui
   selector:
-    {{- include "spark.selectorLabels" . | nindent 4 }}
-{{- end }}
+    {{- include "spark-connect.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: spark-driver

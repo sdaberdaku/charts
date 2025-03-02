@@ -1,0 +1,11 @@
+{{- if .Values.spark.metrics.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "spark-connect.fullname" . }}-metrics-properties
+  labels:
+    {{- include "spark-connect.labels" . | nindent 4 }}
+data:
+  metrics.properties: |-
+    {{- tpl .Values.spark.metrics.properties . | nindent 4 }}
+{{- end }}

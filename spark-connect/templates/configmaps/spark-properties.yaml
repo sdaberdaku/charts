@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "spark-connect.fullname" . }}-spark-properties
+  labels:
+    {{- include "spark-connect.labels" . | nindent 4 }}
+data:
+  spark-properties.conf: |-
+    spark.connect.grpc.binding.port {{ .Values.service.ports.sparkConnect }}
+    spark.driver.cores {{ .Values.spark.driver.cores }}
+    spark.driver.extraClassPath {{ .Values.spark.homeDir }}/jars/*:{{ first .Values.spark.scratchDirs }}/.ivy/jars/*
+    spark.driver.extraJavaOptions -XX:+ExitOnOutOfMemoryError -XX:+UseG1GC
+    spark.driver.memory {{ .Values.spark.driver.memoryMiB }}m
+    spark.driver.memoryOverhead {{ .Values.spark.driver.memoryOverheadMiB }}m
+    spark.driver.port {{ .Values.service.ports.sparkDriver }}
+    spark.executor.cores {{ .Values.spark.executor.cores }}
+    spark.executor.extraClassPath {{ .Values.spark.homeDir }}/jars/*:/home/spark/*
+    spark.executor.extraJavaOptions -XX:+ExitOnOutOfMemoryError -XX:+UseG1GC
+    spark.executor.instances {{ .Values.spark.executor.instances }}
+    spark.executor.memory {{ .Values.spark.executor.memoryMiB }}m
+    spark.executor.memoryOverhead {{ .Values.spark.executor.memoryOverheadMiB }}m
+    spark.jars.ivy {{ first .Values.spark.scratchDirs }}/.ivy
+    spark.kubernetes.authenticate.driver.serviceAccountName {{ include "spark-connect.serviceAccountName" .  }}
+    spark.kubernetes.authenticate.executor.serviceAccountName {{ include "spark-connect.serviceAccountName" .  }}
+    spark.kubernetes.authenticate.submission.caCertFile /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    spark.kubernetes.authenticate.submission.oauthTokenFile /var/run/secrets/kubernetes.io/serviceaccount/token
+    spark.kubernetes.container.image.pullPolicy {{ .Values.image.pullPolicy }}
+    spark.kubernetes.driver.podTemplateContainerName {{ .Chart.Name }}-driver
+    spark.kubernetes.executor.container.image {{ include "spark-connect.image" . }}
+    spark.kubernetes.executor.podTemplateContainerName {{ .Chart.Name }}-executor
+    spark.kubernetes.executor.podTemplateFile {{ .Values.spark.homeDir }}/conf/executor-pod-template.yaml
+    spark.kubernetes.executor.request.cores {{ .Values.spark.executor.requestCoresMilliCPU }}m
+    spark.kubernetes.local.dirs.tmpfs false
+    spark.kubernetes.namespace {{ .Release.Namespace }}
+    spark.local.dir {{ join "," .Values.spark.scratchDirs }}
+    spark.master k8s://{{ .Values.spark.kubernetesEndpoint }}
+    spark.ui.port {{ .Values.service.ports.sparkUI }}
+    {{- with .Values.spark.packages }}
+    spark.jars.packages {{ join "," . }}
+    {{- end }}
+    {{- with .Values.spark.extraProperties }}
+    {{- tpl . $ | nindent 4 }}
+    {{- end }}

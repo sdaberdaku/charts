@@ -1,93 +1,321 @@
-# Default values for spark.
+# Default values for spark-connect.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
-
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
   repository: sebastiandaberdaku/spark-glue-python
-  pullPolicy: Always
+  # This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
   tag: spark-v3.5.0-python-v3.10.12
 
+# This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
+# This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
 
 spark:
-  dynamoDBLogStore: {}
-#    tableName:
-#    region: eu-central-1
-  eventLog:
+  # spark.homeDir -- Sets the Spark Home directory
+  homeDir: /opt/spark
+  # spark.log4j2 -- Configure Spark Logging
+  log4j2:
+    # spark.log4j2.enabled -- Set to true to apply a custom `log4j2.properties` to configure [logging](https://spark.apache.org/docs/latest/configuration.html#configuring-logging).
     enabled: false
-    # s3 url where to save logs
-    dir: "s3://spark-logs-bucket/spark-connect-logs/"
-  awsRegion: eu-central-1
-  awsRoleArn: "arn:aws:iam::123456789012:role/spark-connect-irsa"
-  driver:
-    cores: 1
-    memoryMiB: 2048
-    memoryOverheadMiB: 384
-    ephemeralLocalVolume: {}
-#      name: ephemeral
-#      storageClass: nvme-ssd
-#      storageGiB: 100
-    nodeSelector: {}
-#      dedicated: spark-connect-driver
-    tolerations: []
-#      - key: dedicated
-#        value: spark-connect-driver
-  executor:
-    cores: 8
-    requestCoresMilliCPU: 4000
-    memoryMiB: 4096
-    memoryOverheadMiB: 512
-    ephemeralLocalVolume: {}
-#      name: ephemeral
-#      storageClass: nvme-ssd
-#      storageGiB: 100
-    minExecutors: 1
-    maxExecutors: 4
-    nodeSelector: {}
-#      dedicated: spark-connect-executors
-    tolerations: []
-#      - key: dedicated
-#        value: spark-connect-executors
-  scratchDir: /tmp
-  kubernetesEndpoint: "https://kubernetes.default.svc.cluster.local:443"
+    # spark.log4j2.properties -- Log4j2 (templated) properties to apply.
+    # @raw
+    # Example
+    # ```yaml
+    # properties: |-
+    #   rootLogger.level = warn
+    #   rootLogger.appenderRef.stdout.ref = console
+    # ```
+    properties: ""
+  # spark.metrics -- Configure Spark Metrics
+  metrics:
+    # spark.metrics.enabled -- Set to true to apply a custom `metrics.properties` to configure [metrics](https://spark.apache.org/docs/latest/monitoring.html#metrics).
+    enabled: false
+    # spark.metrics.prometheusServletPath -- Path on which the Prometheus metrics are exposed
+    prometheusServletPath: /metrics
+    # spark.metrics.properties -- Metrics (templated) properties to apply.
+    # @raw
+    # Example
+    # ```yaml
+    # properties: |-
+    #   *.sink.prometheusServlet.class=org.apache.spark.metrics.sink.PrometheusServlet
+    #   *.sink.prometheusServlet.path={{- .Values.spark.metrics.prometheusServletPath }}
+    # ```
+    properties: ""
+  # spark.scratchDirs -- A list of directories to use for "scratch" space in Spark, including map output
+  # files and RDDs that get stored on disk. These should be on a fast, local disk in your system.
+  scratchDirs:
+    - /tmp
+  # spark.packages -- A list of Maven coordinates of jars to include on the driver and executor classpaths.
   packages: []
+  kubernetesEndpoint: "https://kubernetes.default.svc.cluster.local:443"
+  # spark.extraProperties -- Extra Spark properties to apply to the current deployment. If a property is provided more
+  # than once, the last instance will override the previous ones. The value is templated with `tpl`.
+  # @raw
+  # Example
+  # ```yaml
+  # extraProperties: |-
+  #   spark.databricks.delta.optimize.repartition.enabled true
+  #   spark.databricks.delta.properties.defaults.dataSkippingNumIndexedCols -1
+  #   spark.databricks.delta.replaceWhere.constraintCheck.enabled false
+  #   spark.databricks.delta.replaceWhere.dataColumns.enabled true
+  #   spark.databricks.delta.schema.autoMerge.enabled false
+  #   spark.decommission.enabled true
+  extraProperties: ""
+  # spark.driver -- Spark Driver configuration
+  driver:
+    # spark.driver.cores -- Sets the `spark.driver.cores` property. Controls the parallelism of the driver process.
+    cores: 1
+    # spark.driver.requestCoresMilliCPU -- Sets the Driver's Pod Cpu request
+    requestCoresMilliCPU: 1000
+    # spark.driver.memoryMiB -- Spark Driver memory
+    memoryMiB: 3072
+    # spark.driver.memoryOverheadMiB -- Spark Driver memory overhead.
+    # The Pod Memory request is going to be the sum of `memoryMiB` and `memoryOverheadMiB`
+    memoryOverheadMiB: 256
+    # spark.driver.podAnnotations -- Annotations for the Driver Pod
+    podAnnotations: {}
+    # spark.driver.podLabels -- Labels for the Driver Pod
+    podLabels: {}
+    # spark.driver.extraEnv -- Environment variables to add to the Driver Pod.
+    extraEnv: []
+    # spark.driver.nodeSelector -- Set the node selector for the Driver Pod.
+    # @raw
+    # Example
+    # ```yaml
+    # nodeSelector:
+    #   dedicated: spark-connect-driver
+    # ```
+    nodeSelector: {}
+    # spark.driver.tolerations -- Set the tolerations for the Driver Pod.
+    # @raw
+    # Example
+    # ```yaml
+    # tolerations:
+    #   - key: dedicated
+    #     value: spark-connect-driver
+    # ```
+    tolerations: []
+    # spark.driver.affinity -- Set the affinity for the Driver Pod.
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: spark-driver
+              topologyKey: topology.kubernetes.io/zone
+          - weight: 50
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: spark-driver
+              topologyKey: kubernetes.io/hostname
+  executor:
+    # spark.executor.cores -- Sets the `spark.executor.cores` property. Controls the parallelism of the executor processes.
+    cores: 4
+    # spark.executor.requestCoresMilliCPU -- Sets the Executor Pods Cpu request
+    requestCoresMilliCPU: 1000
+    # spark.executor.memoryMiB -- Spark Driver memory
+    memoryMiB: 3072
+    # spark.executor.memoryOverheadMiB -- Spark Executor memory overhead.
+    # The Pod Memory request is going to be the sum of `memoryMiB` and `memoryOverheadMiB`
+    memoryOverheadMiB: 256
+    # spark.executor.instances -- The number of executors to run.
+    instances: 2
+    # spark.executor.podAnnotations -- Annotations for the Executor Pods
+    # @raw
+    # Example
+    # ```yaml
+    # podAnnotations:
+    #   argocd.argoproj.io/compare-options: IgnoreExtraneous
+    # ```
+    podAnnotations: {}
+    # spark.executor.podLabels -- Labels for the Driver Pod
+    podLabels: {}
+    # spark.executor.extraEnv -- Environment variables to add to the Executor Pods.
+    extraEnv: []
+    # spark.executor.nodeSelector -- Set the node selector for the Executor Pods.
+    # @raw
+    # Example
+    # ```yaml
+    # nodeSelector:
+    #   dedicated: spark-connect-executor
+    # ```
+    nodeSelector: {}
+    # spark.executor.tolerations -- Set the tolerations for the Executor Pods.
+    # @raw
+    # Example
+    # ```yaml
+    # tolerations:
+    #   - key: dedicated
+    #     value: spark-connect-executor
+    # ```
+    tolerations: []
+    # spark.executor.affinity -- Set the affinity for the Executor Pods.
+    affinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          # all executor pods must be spawned in the same availability zone
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: spark-executor
+            topologyKey: topology.kubernetes.io/zone
+        preferredDuringSchedulingIgnoredDuringExecution:
+          # try to spawn executors on the same node as the driver pod
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: spark-driver
+              topologyKey: kubernetes.io/hostname
+          # otherwise, try to spawn executors on the same node as the other executor pods
+          - weight: 75
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: spark-executor
+              topologyKey: kubernetes.io/hostname
+          # otherwise, try to spawn executors in the same availability zone as the driver pod
+          - weight: 50
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: spark-driver
+              topologyKey: topology.kubernetes.io/zone
 
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: "spark-connect"
-  automountServiceAccountToken: true
+  name: ""
 
-service:
-  # Specifies whether a service should be created
-  create: true
-  # Annotations to add to the service
-  annotations: {}
-  # The name of the service to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: "spark-connect"
-
-podAnnotations: {}
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+commonPodAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+commonPodLabels: {}
 
 podSecurityContext: {}
   # fsGroup: 2000
 
-securityContext:
-  runAsUser: 185
-  runAsGroup: 185
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
 
-command: []
-extraArgs: []
-extraEnv: []
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  annotations: {}
+  ports:
+    sparkConnect: 15002
+    sparkDriver: 55000
+    sparkUI: 4040
 
-containerPorts:
-  sparkUi: 4040
-  sparkConnect: 15002
+serviceMonitor:
+  # serviceMonitor.enabled -- Set to true to create resources for the
+  # [prometheus-operator](https://github.com/prometheus-operator/prometheus-operator).
+  enabled: false
+  # serviceMonitor.labels -- Labels for serviceMonitor, so that Prometheus can select it
+  labels: {}
+  # serviceMonitor.interval -- The serviceMonitor web endpoint interval
+  interval: "30s"
+  # serviceMonitor.metricRelabelings -- configures the relabeling rules to apply to the samples before ingestion.
+  # @raw
+  # Example
+  # ```yaml
+  # metricRelabelings:
+  #   - sourceLabels: [ __name__ ]
+  #     regex: 'metrics_spark_.*_spark_streaming_(.*)_(eventTime_watermark|inputRate_total|latency|processingRate_total|states_rowsTotal|states_usedBytes)_.*'
+  #     targetLabel: kafkaTopic
+  #     replacement: ${1}
+  #   - sourceLabels: [ __name__ ]
+  #     targetLabel: __name__
+  #     regex: 'metrics_spark_.*_spark_streaming_.*_(eventTime_watermark|inputRate_total|latency|processingRate_total|states_rowsTotal|states_usedBytes)_(Number|Value)'
+  #     replacement: 'spark_streaming_${1}_${2}'
+  #   - sourceLabels: [ __name__ ]
+  #     regex: '^metrics_spark_.*$'
+  #     action: drop
+  #```
+  metricRelabelings: []
+  # serviceMonitor.relabelings -- configures the relabeling rules to apply the target’s metadata labels.
+  # @raw
+  # Example
+  # ```yaml
+  # relabelings:
+  #   - sourceLabels: [ __meta_kubernetes_namespace ]
+  #     regex: (.*)
+  #     targetLabel: namespace
+  #     replacement: ${1}
+  #```
+  relabelings: []
+
+# prometheusRule -- The PrometheusRule custom resource definition (CRD) defines alerting and recording rules to be evaluated by Prometheus or ThanosRuler objects.
+prometheusRule:
+  # prometheusRule.enabled -- Set to true to create resources for the
+  # [prometheus-operator](https://github.com/prometheus-operator/prometheus-operator).
+  enabled: false
+  # prometheusRule.labels -- Labels for prometheusRule, so that Prometheus can select it
+  labels: {}
+  # prometheusRule.groups -- Specification of desired alerting rule definitions for Prometheus.
+  # @raw
+  # Example
+  # ```yaml
+  # groups:
+  #   - name: spark-connect
+  #     rules:
+  #       - alert: SparkStreamingQueries
+  #         expr: count(spark_streaming_eventTime_watermark_Number) < 1 or absent(spark_streaming_eventTime_watermark_Number)
+  #         for: 1m
+  #         labels:
+  #           severity: major
+  #         annotations:
+  #           summary: "Spark Streaming Queries down"
+  #           description: "One or more Spark Streaming Queries are not currently running!"
+  # ```
+  groups: []
+
+
+# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /
+    port: spark-ui
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: spark-ui
