@@ -10,7 +10,7 @@ labels : {}
 #  foo: bar
 
 tags :
-  Company: cardoai
+  Company: example
   Team: Data Engineering
   Owner: Data Engineering
   Environment: Development

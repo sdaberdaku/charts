@@ -5,7 +5,7 @@
 A Helm chart for deploying a Spark-Connect Server on Kubernetes
 
 ## Values
-* `image.repository` - string, default: `"sebastiandaberdaku/spark-glue-pythonk"`
+* `image.repository` - string, default: `"sebastiandaberdaku/spark-glue-python"`
 * `image.pullPolicy` - string, default: `"IfNotPresent"`
 * `image.tag` - string, default: `"spark-v3.5.0-python-v3.10.12"`
 * `imagePullSecrets` - list, default: `[]`

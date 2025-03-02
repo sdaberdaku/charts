@@ -238,7 +238,7 @@ coordinator:
 #    jmxRmiRegistryPort: 9080
 #    jmxRmiServerPort: 9081
 #    exportPort: 9099 # the important one
-#    image: 854884966480.dkr.ecr.eu-central-1.amazonaws.com/cardoai-de-dv-de-ecr-repository-jmx-exporter-sidecar:v1
+#    image: <AWS-ACCOUNT_ID>.dkr.ecr.<region>.amazonaws.com/jmx-exporter-sidecar:v1
 #    imagePullPolicy: IfNotPresent
 
 worker:
@@ -302,7 +302,7 @@ worker:
 #    jmxRmiRegistryPort: 9080
 #    jmxRmiServerPort: 9081
 #    exportPort: 9099 # the important one
-#    image: 854884966480.dkr.ecr.eu-central-1.amazonaws.com/cardoai-de-dv-de-ecr-repository-jmx-exporter-sidecar:v1
+#    image: <AWS-ACCOUNT_ID>.dkr.ecr.<region>.amazonaws.com/jmx-exporter-sidecar:v1
 #    imagePullPolicy: IfNotPresent
 
 kafka:
