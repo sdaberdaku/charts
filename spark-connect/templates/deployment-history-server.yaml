@@ -1,0 +1,86 @@
+{{- if .Values.spark.historyServer.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spark-connect.fullname" . }}-history-server
+  labels:
+    {{- include "spark-connect.labels" . | nindent 4 }}
+    app.kubernetes.io/component: spark-history-server
+spec:
+  replicas: {{ .Values.spark.historyServer.replicas }}
+  selector:
+    matchLabels:
+      {{- include "spark-connect.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: spark-history-server
+  template:
+    metadata:
+      labels:
+        {{- include "spark-connect.labels" . | nindent 8 }}
+        app.kubernetes.io/component: spark-history-server
+        {{- with .Values.spark.historyServer.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.commonPodLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- with .Values.spark.historyServer.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.commonPodAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "spark-connect.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}-history-server
+          image: {{ include "spark-connect.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - "{{ .Values.spark.homeDir }}/sbin/start-history-server.sh"
+          ports:
+            - name: spark-history
+              containerPort: {{ .Values.service.ports.sparkHistoryServer }}
+              protocol: TCP
+          env:
+            - name: SPARK_NO_DAEMONIZE
+              value: "true"
+            - name: SPARK_DAEMON_MEMORY
+              value: {{ .Values.spark.historyServer.sparkDaemonMemory }}
+            - name: SPARK_HISTORY_OPTS
+              value: >-
+                -Dspark.history.ui.port={{ .Values.service.ports.sparkHistoryServer }}
+                {{- include "spark-history-server.properties" . | indent 16 }}
+            {{- with .Values.spark.historyServer.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: spark-history
+          readinessProbe:
+            httpGet:
+              path: /
+              port: spark-history
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - {{ .Values.spark.homeDir }}/sbin/stop-history-server.sh
+          {{- with .Values.spark.historyServer.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.spark.historyServer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.spark.historyServer.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.spark.historyServer.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

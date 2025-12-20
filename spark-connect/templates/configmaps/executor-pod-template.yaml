@@ -14,7 +14,13 @@ data:
       labels:
         {{- include "spark-connect.labels" . | nindent 8 }}
         app.kubernetes.io/component: spark-executor
-        {{- if or .Values.spark.executor.podAnnotations .Values.commonPodAnnotations }}
+        {{- with .Values.spark.executor.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.commonPodLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- if or .Values.spark.executor.podAnnotations .Values.commonPodAnnotations }}
       annotations:
         {{- with .Values.spark.executor.podAnnotations }}
         {{- toYaml . | nindent 8 }}

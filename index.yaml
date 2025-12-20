@@ -3,10 +3,10 @@ entries:
   jdbc-connections:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-03-23T18:27:53.832576238+01:00"
+    created: "2025-12-20T22:05:42.81906696+01:00"
     description: This Helm Chart deploys JDBC connections as Kubernetes secrets to
       be used by Trino.
-    digest: 2136aaf67388083d213c88f82cab71ca1e19973aea8fbfcbee767fec0185711e
+    digest: 166a17cfb135a7dc5b81fbe3cfe44491bbbac5d0fd4ff313898831d8c92aaf6b
     maintainers:
     - email: sebastiandaberdaku@gmail.com
       name: Sebastian Daberdaku
@@ -18,9 +18,9 @@ entries:
   karpenter-extra:
   - apiVersion: v2
     appVersion: 1.0.3
-    created: "2025-03-23T18:27:53.833988349+01:00"
+    created: "2025-12-20T22:05:42.819496314+01:00"
     description: A chart for managing Karpenter NodeClasses and NodePools
-    digest: fe9c6dc89f7152563a53fc1fac46ba8e68aade292ac2ac80554b72a79088788b
+    digest: 9149e27356869e40269e9bf07c0349de3de3a433becc1ddc82636695253c4f83
     maintainers:
     - email: sebastiandaberdaku@gmail.com
       name: Sebastian Daberdaku
@@ -32,10 +32,10 @@ entries:
   kyverno-policy:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-03-23T18:27:53.834516766+01:00"
+    created: "2025-12-20T22:05:42.819683565+01:00"
     description: This Helm chart installs a Kyverno Cluster Policy that forces nodeSelector
       and tolerations on all the pods of a given namespace.
-    digest: 5b6f123067e33f8ada2144fd507b5d07a85557933a35ca4a6b756824d031a0d7
+    digest: b05b073686dfa30b886c8b6961f31cf52c977119f8dfb9e37ce4b96d26dc7d20
     maintainers:
     - email: sebastiandaberdaku@gmail.com
       name: Sebastian Daberdaku
@@ -47,9 +47,9 @@ entries:
   secrets:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-03-23T18:27:53.835095615+01:00"
+    created: "2025-12-20T22:05:42.819868942+01:00"
     description: This Helm Chart deploys Kubernetes secrets required by Airflow.
-    digest: 4422ad025bc66430ade4ba28d7181b1db0a4609d6fe686c2cc37c9cb3c1dcf3f
+    digest: 78185810a6da8aed5cd3a4b088ecdd8c79596e24e18ef6f9943f18d18b384f40
     maintainers:
     - email: sebastiandaberdaku@gmail.com
       name: Sebastian Daberdaku
@@ -61,9 +61,9 @@ entries:
   spark-addon:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-03-23T18:27:53.835556035+01:00"
+    created: "2025-12-20T22:05:42.820037207+01:00"
     description: Installs the Spark addons for Airflow.
-    digest: 60f1d8b5e4a14e20ba1cd99a8aebbb0981598cf5c8707aaacb49e9cd9ded96e9
+    digest: 8f726f3ffb83287596457cb8e7bebf1315224d5e77fea2f1367941249a226771
     maintainers:
     - email: sebastiandaberdaku@gmail.com
       name: Sebastian Daberdaku
@@ -74,10 +74,23 @@ entries:
     version: 1.0.0
   spark-connect:
   - apiVersion: v2
-    appVersion: 3.5.1
-    created: "2025-03-23T18:27:53.840672604+01:00"
+    appVersion: 4.1.0-scala2.13-java21-python3-ubuntu
+    created: "2025-12-20T22:05:42.822415562+01:00"
     description: A Helm chart for deploying a Spark-Connect Server on Kubernetes
-    digest: 6b3f957147d8db9981487f7b1e85335c21ec29bc796124c137d27d995c8bae0d
+    digest: 92bb22b3027b662a57d229eb439b8ccd3e0f37c4def7db6ecdeeb20152320a13
+    maintainers:
+    - email: 112859176+sdaberdaku@users.noreply.github.com
+      name: Sebastian Daberdaku
+    name: spark-connect
+    type: application
+    urls:
+    - spark-connect-2.0.0.tgz
+    version: 2.0.0
+  - apiVersion: v2
+    appVersion: 3.5.1
+    created: "2025-12-20T22:05:42.821621064+01:00"
+    description: A Helm chart for deploying a Spark-Connect Server on Kubernetes
+    digest: f3a51eed8cb0037cc450ff4363d82919be9a2dd173c661719401299aab82b798
     maintainers:
     - email: 112859176+sdaberdaku@users.noreply.github.com
       name: Sebastian Daberdaku
@@ -88,7 +101,7 @@ entries:
     version: 1.2.0
   - apiVersion: v2
     appVersion: 3.5.1
-    created: "2025-03-23T18:27:53.838603458+01:00"
+    created: "2025-12-20T22:05:42.82095723+01:00"
     description: A Helm chart for deploying a Spark-Connect Server on Kubernetes
     digest: efd9d3e0469ece84bf777ca232f0ebf5db4947f556848b94851ead92312edf16
     maintainers:
@@ -101,7 +114,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 3.5.0
-    created: "2025-03-23T18:27:53.836662355+01:00"
+    created: "2025-12-20T22:05:42.820384498+01:00"
     description: A Helm chart for deploying a Spark-Connect Server on Kubernetes
     digest: 3a08516ffe097f52cf1704ec704c00f59146e9363e7489d7c869c3038412c348
     maintainers:
@@ -115,10 +128,10 @@ entries:
   spark-history-server:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-03-23T18:27:53.842142165+01:00"
+    created: "2025-12-20T22:05:42.822629172+01:00"
     description: Spark History Server provides a web UI for completed and running
       Spark applications.
-    digest: 75e78d46daa98c3a9bf933a015829ca4d2fc7ec78cdc912f7df7dda8190ce78a
+    digest: dc98eb4c4b00f83ec6328896c1fbc45bd6f326f0afe50be2d92cbc3ff6ee7820
     maintainers:
     - email: sebastiandaberdaku@gmail.com
       name: Sebastian Daberdaku
@@ -130,10 +143,10 @@ entries:
   storage-class-with-tags:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-03-23T18:27:53.842555665+01:00"
+    created: "2025-12-20T22:05:42.822768964+01:00"
     description: This Helm chart installs a custom storage class that enforces EBS
       tagging.
-    digest: 081808da004076ebed0906e0b94839da4c1eff201a0404752563e16c166d5e41
+    digest: 96d77ddfa78cca33e23bf1952c46c6789f1832f6afccc385a99564be25ef9f06
     maintainers:
     - email: sebastiandaberdaku@gmail.com
       name: Sebastian Daberdaku
@@ -145,10 +158,10 @@ entries:
   trino:
   - apiVersion: v2
     appVersion: "435"
-    created: "2025-03-23T18:27:53.844382706+01:00"
+    created: "2025-12-20T22:05:42.824095799+01:00"
     description: Fast distributed SQL query engine for big data analytics that helps
       you explore your data universe
-    digest: 7ac7e137b24338a2fcc00f45305e6fca87ef63e958a138d62e0f2fdea68c6726
+    digest: a5ed36ca90909948a54bff63ac904b9a7c0229f9d1b42b3f81455b1c72ba3e48
     home: https://trino.io/
     icon: https://trino.io/assets/trino.png
     maintainers:
@@ -162,4 +175,4 @@ entries:
     urls:
     - trino-0.15.0.tgz
     version: 0.15.0
-generated: "2025-03-23T18:27:53.831717004+01:00"
+generated: "2025-12-20T22:05:42.818334729+01:00"

@@ -4,11 +4,11 @@
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: sebastiandaberdaku/spark-glue-python
+  repository: ghcr.io/sdaberdaku/spark-with-glue
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: spark-v3.5.0-python-v3.10.12
+  tag: ""
 
 # This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
@@ -60,13 +60,26 @@ spark:
   # Example
   # ```yaml
   # extraProperties: |-
-  #   spark.databricks.delta.optimize.repartition.enabled true
-  #   spark.databricks.delta.properties.defaults.dataSkippingNumIndexedCols -1
-  #   spark.databricks.delta.replaceWhere.constraintCheck.enabled false
-  #   spark.databricks.delta.replaceWhere.dataColumns.enabled true
-  #   spark.databricks.delta.schema.autoMerge.enabled false
-  #   spark.decommission.enabled true
-  extraProperties: ""
+  #   spark.sql.catalogImplementation hive
+  #   spark.dynamicAllocation.enabled true
+  #   spark.dynamicAllocation.executorIdleTimeout 300s
+  #   spark.dynamicAllocation.cachedExecutorIdleTimeout 300s
+  #   spark.dynamicAllocation.initialExecutors 0
+  #   spark.dynamicAllocation.minExecutors 0
+  #   spark.dynamicAllocation.maxExecutors 5
+  #   spark.dynamicAllocation.shuffleTracking.enabled true
+  #   spark.dynamicAllocation.shuffleTracking.timeout 600s
+  #   spark.hadoop.aws.region us-east-2
+  #   spark.hadoop.fs.s3.impl org.apache.hadoop.fs.s3a.S3AFileSystem
+  #   spark.hadoop.fs.s3a.impl org.apache.hadoop.fs.s3a.S3AFileSystem
+  #   spark.hadoop.fs.s3a.aws.credentials.provider software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider
+  #   spark.hadoop.fs.s3a.endpoint s3.us-east-2.amazonaws.com
+  #   spark.hive.imetastoreclient.factory.class com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
+  #   spark.hive.aws.catalog.credentials.provider.factory.class software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider
+  #   spark.hive.aws.glue.endpoint glue.us-east-2.amazonaws.com
+  #   spark.hive.aws.region us-east-2
+  # ```
+  extraProperties: ~
   # spark.driver -- Spark Driver configuration
   driver:
     # spark.driver.cores -- Sets the `spark.driver.cores` property. Controls the parallelism of the driver process.
@@ -137,7 +150,7 @@ spark:
     #   argocd.argoproj.io/compare-options: IgnoreExtraneous
     # ```
     podAnnotations: {}
-    # spark.executor.podLabels -- Labels for the Driver Pod
+    # spark.executor.podLabels -- Labels for the Executor Pods
     podLabels: {}
     # spark.executor.extraEnv -- Environment variables to add to the Executor Pods.
     extraEnv: []
@@ -189,6 +202,81 @@ spark:
                 matchLabels:
                   app.kubernetes.io/component: spark-driver
               topologyKey: topology.kubernetes.io/zone
+  historyServer:
+    # spark.historyServer.enabled -- Set to true to deploy the Spark History Server alongside Spark Connect
+    enabled: false
+    # spark.historyServer.replicas -- Number of replicas for the Spark History Server Deployment
+    replicas: 1
+    # spark.historyServer.extraProperties -- Extra Spark properties to apply to the current deployment. If a property is provided more
+    # than once, the last instance will override the previous ones. The value is templated with `tpl`.
+    # @raw
+    # Example
+    # ```yaml
+    # extraProperties: |-
+    #   spark.spark.plugins: io.dataflint.spark.SparkDataflintPlugin
+    #   spark.dataflint.iceberg.autoCatalogDiscovery: true
+    extraProperties: ~
+
+    # spark.historyServer.sparkDaemonMemory -- Memory allocated to the Spark History Server daemon
+    sparkDaemonMemory: 1024m
+    # spark.historyServer.resources -- Resource requests and limits for the Spark History Server Pod
+    # @raw
+    # Example
+    # ```yaml
+    # resources:
+    #   requests:
+    #     memory: "1Gi"
+    #     cpu: "500m"
+    #   limits:
+    #     memory: "2Gi"
+    #     cpu: "1"
+    # ```
+    resources: { }
+
+    # spark.historyServer.podAnnotations -- Annotations for the Spark History Server Pods
+    # @raw
+    # Example
+    # ```yaml
+    # podAnnotations:
+    #   argocd.argoproj.io/compare-options: IgnoreExtraneous
+    # ```
+    podAnnotations: { }
+    # spark.historyServer.podLabels -- Labels for the Spark History Server Pods
+    podLabels: { }
+    # spark.historyServer.extraEnv -- Environment variables to add to the Spark History Server Pods.
+    extraEnv: [ ]
+    # spark.historyServer.nodeSelector -- Set the node selector for the Spark History Server Pods.
+    # @raw
+    # Example
+    # ```yaml
+    # nodeSelector:
+    #   dedicated: spark-history-server
+    # ```
+    nodeSelector: { }
+    # spark.historyServer.tolerations -- Set the tolerations for the Spark History Server Pods.
+    # @raw
+    # Example
+    # ```yaml
+    # tolerations:
+    #   - key: dedicated
+    #     value: spark-history-server
+    # ```
+    tolerations: [ ]
+    # spark.historyServer.affinity -- Set the affinity for the Spark History Server Pods.
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: spark-history-server
+              topologyKey: topology.kubernetes.io/zone
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: spark-history-server
+            topologyKey: kubernetes.io/hostname
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
@@ -227,6 +315,7 @@ service:
     sparkConnect: 15002
     sparkDriver: 55000
     sparkUI: 4040
+    sparkHistoryServer: 18080
 
 serviceMonitor:
   # serviceMonitor.enabled -- Set to true to create resources for the
@@ -294,28 +383,48 @@ prometheusRule:
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
-  enabled: false
-  className: ""
-  annotations: {}
+  connect:
+    enabled: false
+    className: ""
+    annotations: { }
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-livenessProbe:
-  httpGet:
-    path: /
-    port: spark-ui
-
-readinessProbe:
-  httpGet:
-    path: /
-    port: spark-ui
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: [ ]
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+  ui:
+    enabled: false
+    className: ""
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+  historyServer:
+    enabled: false
+    className: ""
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local

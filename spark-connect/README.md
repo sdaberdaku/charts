@@ -1,13 +1,13 @@
 # spark-connect
 
-![Version: 1.2.1](https://img.shields.io/badge/Version-1.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.5.1](https://img.shields.io/badge/AppVersion-3.5.1-informational?style=flat-square)
+![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.1.0](https://img.shields.io/badge/AppVersion-4.1.0-informational?style=flat-square)
 
 A Helm chart for deploying a Spark-Connect Server on Kubernetes
 
 ## Values
-* `image.repository` - string, default: `"sebastiandaberdaku/spark-glue-python"`
+* `image.repository` - string, default: `"ghcr.io/sdaberdaku/spark-with-glue"`
 * `image.pullPolicy` - string, default: `"IfNotPresent"`
-* `image.tag` - string, default: `"spark-v3.5.0-python-v3.10.12"`
+* `image.tag` - string, default: `"4.1.0-scala2.13-java21-python3-ubuntu"`
 * `imagePullSecrets` - list, default: `[]`
 * `nameOverride` - string, default: `""`
 * `fullnameOverride` - string, default: `""`
@@ -54,18 +54,31 @@ A Helm chart for deploying a Spark-Connect Server on Kubernetes
 
   A list of Maven coordinates of jars to include on the driver and executor classpaths.
 * `spark.kubernetesEndpoint` - string, default: `"https://kubernetes.default.svc.cluster.local:443"`
-* `spark.extraProperties` - string, default: `""`  
+* `spark.extraProperties` - string, default: `nil`  
 
   Extra Spark properties to apply to the current deployment. If a property is provided more than once, the last instance will override the previous ones. The value is templated with `tpl`.
   Example
   ```yaml
   extraProperties: |-
-    spark.databricks.delta.optimize.repartition.enabled true
-    spark.databricks.delta.properties.defaults.dataSkippingNumIndexedCols -1
-    spark.databricks.delta.replaceWhere.constraintCheck.enabled false
-    spark.databricks.delta.replaceWhere.dataColumns.enabled true
-    spark.databricks.delta.schema.autoMerge.enabled false
-    spark.decommission.enabled true
+    spark.sql.catalogImplementation hive
+    spark.dynamicAllocation.enabled true
+    spark.dynamicAllocation.executorIdleTimeout 300s
+    spark.dynamicAllocation.cachedExecutorIdleTimeout 300s
+    spark.dynamicAllocation.initialExecutors 0
+    spark.dynamicAllocation.minExecutors 0
+    spark.dynamicAllocation.maxExecutors 5
+    spark.dynamicAllocation.shuffleTracking.enabled true
+    spark.dynamicAllocation.shuffleTracking.timeout 600s
+    spark.hadoop.aws.region us-east-2
+    spark.hadoop.fs.s3.impl org.apache.hadoop.fs.s3a.S3AFileSystem
+    spark.hadoop.fs.s3a.impl org.apache.hadoop.fs.s3a.S3AFileSystem
+    spark.hadoop.fs.s3a.aws.credentials.provider software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider
+    spark.hadoop.fs.s3a.endpoint s3.us-east-2.amazonaws.com
+    spark.hive.imetastoreclient.factory.class com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory
+    spark.hive.aws.catalog.credentials.provider.factory.class software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider
+    spark.hive.aws.glue.endpoint glue.us-east-2.amazonaws.com
+    spark.hive.aws.region us-east-2
+  ```
 * `spark.driver` - object, default: `{"affinity":{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"spark-driver"}},"topologyKey":"topology.kubernetes.io/zone"},"weight":100},{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"spark-driver"}},"topologyKey":"kubernetes.io/hostname"},"weight":50}]}},"cores":1,"extraEnv":[],"memoryMiB":3072,"memoryOverheadMiB":256,"nodeSelector":{},"podAnnotations":{},"podLabels":{},"requestCoresMilliCPU":1000,"tolerations":[]}`  
 
   Spark Driver configuration
@@ -135,7 +148,7 @@ A Helm chart for deploying a Spark-Connect Server on Kubernetes
   ```
 * `spark.executor.podLabels` - object, default: `{}`  
 
-  Labels for the Driver Pod
+  Labels for the Executor Pods
 * `spark.executor.extraEnv` - list, default: `[]`  
 
   Environment variables to add to the Executor Pods.
@@ -159,6 +172,70 @@ A Helm chart for deploying a Spark-Connect Server on Kubernetes
 * `spark.executor.affinity` - object, default: `{"podAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"spark-driver"}},"topologyKey":"kubernetes.io/hostname"},"weight":100},{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"spark-executor"}},"topologyKey":"kubernetes.io/hostname"},"weight":75},{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"spark-driver"}},"topologyKey":"topology.kubernetes.io/zone"},"weight":50}],"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"spark-executor"}},"topologyKey":"topology.kubernetes.io/zone"}]}}`  
 
   Set the affinity for the Executor Pods.
+* `spark.historyServer.enabled` - bool, default: `false`  
+
+  Set to true to deploy the Spark History Server alongside Spark Connect
+* `spark.historyServer.replicas` - int, default: `1`  
+
+  Number of replicas for the Spark History Server Deployment
+* `spark.historyServer.extraProperties` - string, default: `nil`  
+
+  Extra Spark properties to apply to the current deployment. If a property is provided more than once, the last instance will override the previous ones. The value is templated with `tpl`.
+  Example
+  ```yaml
+  extraProperties: |-
+    spark.spark.plugins: io.dataflint.spark.SparkDataflintPlugin
+    spark.dataflint.iceberg.autoCatalogDiscovery: true
+* `spark.historyServer.sparkDaemonMemory` - string, default: `"1024m"`  
+
+  Memory allocated to the Spark History Server daemon
+* `spark.historyServer.resources` - object, default: `{}`  
+
+  Resource requests and limits for the Spark History Server Pod
+  Example
+  ```yaml
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1"
+  ```
+* `spark.historyServer.podAnnotations` - object, default: `{}`  
+
+  Annotations for the Spark History Server Pods
+  Example
+  ```yaml
+  podAnnotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+  ```
+* `spark.historyServer.podLabels` - object, default: `{}`  
+
+  Labels for the Spark History Server Pods
+* `spark.historyServer.extraEnv` - list, default: `[]`  
+
+  Environment variables to add to the Spark History Server Pods.
+* `spark.historyServer.nodeSelector` - object, default: `{}`  
+
+  Set the node selector for the Spark History Server Pods.
+  Example
+  ```yaml
+  nodeSelector:
+    dedicated: spark-history-server
+  ```
+* `spark.historyServer.tolerations` - list, default: `[]`  
+
+  Set the tolerations for the Spark History Server Pods.
+  Example
+  ```yaml
+  tolerations:
+    - key: dedicated
+      value: spark-history-server
+  ```
+* `spark.historyServer.affinity` - object, default: `{"podAntiAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"podAffinityTerm":{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"spark-history-server"}},"topologyKey":"topology.kubernetes.io/zone"},"weight":100}],"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"spark-history-server"}},"topologyKey":"kubernetes.io/hostname"}]}}`  
+
+  Set the affinity for the Spark History Server Pods.
 * `serviceAccount.create` - bool, default: `true`
 * `serviceAccount.automount` - bool, default: `true`
 * `serviceAccount.annotations` - object, default: `{}`
@@ -171,6 +248,7 @@ A Helm chart for deploying a Spark-Connect Server on Kubernetes
 * `service.ports.sparkConnect` - int, default: `15002`
 * `service.ports.sparkDriver` - int, default: `55000`
 * `service.ports.sparkUI` - int, default: `4040`
+* `service.ports.sparkHistoryServer` - int, default: `18080`
 * `serviceMonitor.enabled` - bool, default: `false`  
 
   Set to true to create resources for the [prometheus-operator](https://github.com/prometheus-operator/prometheus-operator).
@@ -235,17 +313,27 @@ A Helm chart for deploying a Spark-Connect Server on Kubernetes
             summary: "Spark Streaming Queries down"
             description: "One or more Spark Streaming Queries are not currently running!"
   ```
-* `ingress.enabled` - bool, default: `false`
-* `ingress.className` - string, default: `""`
-* `ingress.annotations` - object, default: `{}`
-* `ingress.hosts[0].host` - string, default: `"chart-example.local"`
-* `ingress.hosts[0].paths[0].path` - string, default: `"/"`
-* `ingress.hosts[0].paths[0].pathType` - string, default: `"ImplementationSpecific"`
-* `ingress.tls` - list, default: `[]`
-* `livenessProbe.httpGet.path` - string, default: `"/"`
-* `livenessProbe.httpGet.port` - string, default: `"spark-ui"`
-* `readinessProbe.httpGet.path` - string, default: `"/"`
-* `readinessProbe.httpGet.port` - string, default: `"spark-ui"`
+* `ingress.connect.enabled` - bool, default: `false`
+* `ingress.connect.className` - string, default: `""`
+* `ingress.connect.annotations` - object, default: `{}`
+* `ingress.connect.hosts[0].host` - string, default: `"chart-example.local"`
+* `ingress.connect.hosts[0].paths[0].path` - string, default: `"/"`
+* `ingress.connect.hosts[0].paths[0].pathType` - string, default: `"ImplementationSpecific"`
+* `ingress.connect.tls` - list, default: `[]`
+* `ingress.ui.enabled` - bool, default: `false`
+* `ingress.ui.className` - string, default: `""`
+* `ingress.ui.annotations` - object, default: `{}`
+* `ingress.ui.hosts[0].host` - string, default: `"chart-example.local"`
+* `ingress.ui.hosts[0].paths[0].path` - string, default: `"/"`
+* `ingress.ui.hosts[0].paths[0].pathType` - string, default: `"ImplementationSpecific"`
+* `ingress.ui.tls` - list, default: `[]`
+* `ingress.historyServer.enabled` - bool, default: `false`
+* `ingress.historyServer.className` - string, default: `""`
+* `ingress.historyServer.annotations` - object, default: `{}`
+* `ingress.historyServer.hosts[0].host` - string, default: `"chart-example.local"`
+* `ingress.historyServer.hosts[0].paths[0].path` - string, default: `"/"`
+* `ingress.historyServer.hosts[0].paths[0].pathType` - string, default: `"ImplementationSpecific"`
+* `ingress.historyServer.tls` - list, default: `[]`
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

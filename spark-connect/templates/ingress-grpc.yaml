@@ -1,0 +1,43 @@
+{{- if .Values.ingress.connect.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "spark-connect.fullname" . }}-grpc
+  labels:
+    {{- include "spark-connect.labels" . | nindent 4 }}
+  {{- with .Values.ingress.connect.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.connect.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- if .Values.ingress.connect.tls }}
+  tls:
+    {{- range .Values.ingress.connect.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.connect.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            {{- with .pathType }}
+            pathType: {{ . }}
+            {{- end }}
+            backend:
+              service:
+                name: {{ include "spark-connect.fullname" $ }}
+                port:
+                  name: spark-connect
+          {{- end }}
+    {{- end }}
+{{- end }}

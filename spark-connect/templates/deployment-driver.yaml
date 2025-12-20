@@ -74,9 +74,13 @@ spec:
               containerPort: {{ .Values.service.ports.sparkUI }}
               protocol: TCP
           livenessProbe:
-            {{- toYaml .Values.livenessProbe | nindent 12 }}
+            httpGet:
+              path: /
+              port: spark-ui
           readinessProbe:
-            {{- toYaml .Values.readinessProbe | nindent 12 }}
+            httpGet:
+              path: /
+              port: spark-ui
           lifecycle:
             preStop:
               exec:

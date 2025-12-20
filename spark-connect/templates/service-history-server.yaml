@@ -1,0 +1,23 @@
+{{- if .Values.spark.historyServer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "spark-connect.fullname" . }}-history-server
+  labels:
+    {{- include "spark-connect.labels" . | nindent 4 }}
+    app.kubernetes.io/component: spark-history-server
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{ . | toYaml | nindent 4 }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.service.ports.sparkHistoryServer }}
+      targetPort: spark-history
+      protocol: TCP
+      name: spark-history
+  selector:
+    {{- include "spark-connect.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: spark-history-server
+{{- end }}

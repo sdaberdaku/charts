@@ -64,3 +64,12 @@ Create the name of the service account to use
 {{- define "spark-connect.image" -}}
 {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
 {{- end }}
+
+{{- define "spark-history-server.properties" -}}
+{{- with .Values.spark.historyServer.extraProperties }}
+{{- $extraProperties :=  tpl . $ }}
+{{- range $property, $value := fromYaml $extraProperties }}
+-D{{ $property }}={{ $value -}}
+{{- end }}
+{{- end }}
+{{- end }}
