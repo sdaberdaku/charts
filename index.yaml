@@ -75,6 +75,21 @@ entries:
   spark-connect:
   - apiVersion: v2
     appVersion: 4.1.0-scala2.13-java21-python3-ubuntu
+    created: "2026-10-28T21:10:33.517861487+01:00"
+    deprecated: true
+    description: Deprecated. Moved to oci://ghcr.io/sdaberdaku/charts/spark-connect
+      (https://github.com/sdaberdaku/spark-connect-chart)
+    digest: f940105f10c3a1553e56c263af638629827cb2c99fc31b68f07259420890fb34
+    maintainers:
+    - email: 112859176+sdaberdaku@users.noreply.github.com
+      name: Sebastian Daberdaku
+    name: spark-connect
+    type: application
+    urls:
+    - spark-connect-2.0.1.tgz
+    version: 2.0.1
+  - apiVersion: v2
+    appVersion: 4.1.0-scala2.13-java21-python3-ubuntu
     created: "2025-12-20T22:05:42.822415562+01:00"
     description: A Helm chart for deploying a Spark-Connect Server on Kubernetes
     digest: 92bb22b3027b662a57d229eb439b8ccd3e0f37c4def7db6ecdeeb20152320a13
@@ -175,4 +190,4 @@ entries:
     urls:
     - trino-0.15.0.tgz
     version: 0.15.0
-generated: "2025-12-20T22:05:42.818334729+01:00"
+generated: "2026-10-28T21:10:33.514513984+01:00"

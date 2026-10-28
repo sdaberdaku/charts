@@ -1,6 +1,6 @@
 apiVersion: v2
 name: spark-connect
-description: A Helm chart for deploying a Spark-Connect Server on Kubernetes
+description: Deprecated. Moved to oci://ghcr.io/sdaberdaku/charts/spark-connect (https://github.com/sdaberdaku/spark-connect-chart)
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
@@ -14,7 +14,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 2.0.0
+version: 2.0.1
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
@@ -25,3 +25,4 @@ appVersion: "4.1.0-scala2.13-java21-python3-ubuntu"
 maintainers:
   - name: Sebastian Daberdaku
     email: 112859176+sdaberdaku@users.noreply.github.com
+deprecated: true

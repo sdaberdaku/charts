@@ -1,13 +1,15 @@
 # spark-connect
 
-![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.1.0](https://img.shields.io/badge/AppVersion-4.1.0-informational?style=flat-square)
+> **:exclamation: This Helm Chart is deprecated!**
 
-A Helm chart for deploying a Spark-Connect Server on Kubernetes
+![Version: 2.0.1](https://img.shields.io/badge/Version-2.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 4.1.0-scala2.13-java21-python3-ubuntu](https://img.shields.io/badge/AppVersion-4.1.0--scala2.13--java21--python3--ubuntu-informational?style=flat-square)
+
+Deprecated. Moved to oci://ghcr.io/sdaberdaku/charts/spark-connect (https://github.com/sdaberdaku/spark-connect-chart)
 
 ## Values
 * `image.repository` - string, default: `"ghcr.io/sdaberdaku/spark-with-glue"`
 * `image.pullPolicy` - string, default: `"IfNotPresent"`
-* `image.tag` - string, default: `"4.1.0-scala2.13-java21-python3-ubuntu"`
+* `image.tag` - string, default: `""`
 * `imagePullSecrets` - list, default: `[]`
 * `nameOverride` - string, default: `""`
 * `fullnameOverride` - string, default: `""`

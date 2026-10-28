@@ -5,7 +5,7 @@ My custom Helm Chart repository, served from the `gh-pages` branch at https://sd
 
 | Chart | Folder | Latest version | Description |
 | --- | --- | --- | --- |
-| `spark-connect` | [spark-connect](spark-connect) | 2.0.0 | Spark Connect server on Kubernetes. The default image is `ghcr.io/sdaberdaku/spark-with-glue`. |
+| `spark-connect` | [spark-connect](spark-connect) | 2.0.1 | Deprecated. The Spark Connect chart now lives in [spark-connect-chart](https://github.com/sdaberdaku/spark-connect-chart) and installs from `oci://ghcr.io/sdaberdaku/charts/spark-connect`. Its values are not compatible with 2.x. |
 | `spark-history-server` | [spark-history-server](spark-history-server) | 1.0.0 | Spark History Server web UI for completed and running Spark applications. |
 | `trino` | [trino](trino) | 0.15.0 | Trino 435, based on the official Trino chart from [trinodb/charts](https://github.com/trinodb/charts). |
 | `jdbc-connections` | [trino-jdbc-connections](trino-jdbc-connections) | 1.0.0 | JDBC connections stored as Kubernetes secrets, for use by Trino. |
